@@ -1,19 +1,20 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"net"
-	"os"
+	"log"
+
+	"github.com/medinae/tcpchat/client"
+	"github.com/medinae/tcpchat/env"
 )
 
 func main() {
-	con, err := net.Dial("tcp", "127.0.0.1:8081")
+	addr := env.GetEnvOrDefault("TCPCHAT_SERVER_ADDR", ":8081")
+	client, err := client.NewTCPChatClient(addr)
 	if err != nil {
-		panic(err)
+		log.Fatalf("error creating tcp chat client: %w", err)
 	}
-
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -21,36 +22,5 @@ func main() {
 	fmt.Print("Username:")
 	fmt.Scanln(&username)
 
-	go listen(cancel, con, username)
-	for {
-		ir := bufio.NewReader(os.Stdin)
-		fmt.Print(username + ": ")
-		msg, err := ir.ReadString('\n')
-		if err != nil {
-			panic(err)
-		}
-
-		content := fmt.Sprintf("%s %s\n", username, msg)
-		fmt.Fprintf(con, content)
-	}
-}
-
-func listen(cancel context.CancelFunc, con net.Conn, username string) {
-	for {
-		r, err := bufio.NewReader(con).ReadString('\n')
-		if err != nil {
-			fmt.Println("### Connection to server was lost... ###")
-			cancel()
-			panic(err)
-		}
-
-		eraseCurrentLine()
-		fmt.Print(r)
-		fmt.Print(username + ": ")
-	}
-}
-
-func eraseCurrentLine() {
-	fmt.Printf("%c[2K", 27)
-	fmt.Printf("\r")
+	client.ListenAndInteract(cancel, username)
 }

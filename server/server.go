@@ -39,6 +39,7 @@ func (ts *TCPChatServer) Start() error {
 			return err
 		}
 		ts.clients = append(ts.clients, con)
+		fmt.Println("A new user just got connected..")
 		go ts.handleCon(con)
 	}
 }
@@ -55,8 +56,6 @@ func (ts *TCPChatServer) handleCon(con net.Conn) {
 		}
 
 		content := fmt.Sprintf("%s: %s", user, string(msg))
-		fmt.Print(content)
-
 		ts.broadcastMessage(content, con)
 	}
 }
