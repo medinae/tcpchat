@@ -51,7 +51,7 @@ func (cc *TCPChatClient) listen(cancel context.CancelFunc, username string) {
 		if err != nil {
 			fmt.Println("### Connection to server was lost... ###")
 			cancel()
-			panic(err)
+			break
 		}
 
 		cc.eraseCurrentLine()
